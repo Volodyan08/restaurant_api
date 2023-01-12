@@ -1,0 +1,181 @@
+openapi: 3.0.3
+info:
+  version: 1.0.0
+  title: Restaurant API
+  description: Restaurant API
+
+
+components:
+  schemas:
+    uuid:
+      type: string
+      format: uuid
+      example: 8e767454-ebe0-4b25-b061-d99bf945db38
+
+    Type:
+      type: string
+      maxLength: 16
+      enum:
+        - KITCHEN
+        - CLIENT
+
+    CheckStatus:
+      type: string
+      maxLength: 16
+      enum:
+        - NEW
+        - RENDERED
+        - PRINTED
+
+    CheckDetails:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        created:
+          type: string
+        checkStatus:
+          $ref: '#/components/schemas/CheckStatus'
+        checkType:
+          $ref: '#/components/schemas/Type'
+        printerId:
+          type: integer
+        printerType:
+          $ref: '#/components/schemas/Type'
+
+    ChecksList:
+      type: object
+      properties:
+        totalCount:
+          type: integer
+          example: 55
+        totalPages:
+          type: integer
+          example: 10
+        currentPage:
+          type: integer
+          example: 1
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/CheckDetails'
+
+    CreateChecksRequest:
+      type: object
+      properties:
+        poindId:
+          $ref: '#/components/schemas/uuid'
+        orderNumber:
+          type: integer
+          example: 55
+        orderContent:
+          type: string
+
+    PrintChecksRequest:
+      type: object
+      properties:
+        apiKey:
+          type: string
+
+    PrintChecksResponse:
+      type: object
+      properties:
+        content:
+          type: string
+
+  responses:
+    BadRequest:
+      description: Validation error
+
+  parameters:
+    limitParam:
+      name: limit
+      in: query
+      description: Number of items on a page
+      schema:
+        type: integer
+    pageNumber:
+      name: page
+      in: query
+      description: Page number
+      schema:
+        type: integer
+    printerParam:
+      name: printer
+      in: query
+      description: Filter by printer
+      schema:
+        type: integer
+    checkType:
+      name: type
+      in: query
+      description: Filter by check type
+      schema:
+        type: string
+    checkStatus:
+      name: status
+      in: query
+      description: Filter by check status
+      schema:
+        type: string
+
+paths:
+  /checks:
+    get:
+      operationId: getChecksList
+      tags:
+        - checks
+      summary: Get checks list
+      parameters:
+        - $ref: '#/components/parameters/limitParam'
+        - $ref: '#/components/parameters/pageNumber'
+        - $ref: '#/components/parameters/printerParam'
+        - $ref: '#/components/parameters/checkType'
+        - $ref: '#/components/parameters/checkStatus'
+      responses:
+        '200':
+          description: Successfully returned checks list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChecksList"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      operationId: createChecks
+      tags:
+        - checks
+      summary: Create checks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateChecksRequest'
+      responses:
+        '200':
+          description: Checks successfully created
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /checks/print:
+   post:
+      operationId: printChecks
+      tags:
+        - checks
+      summary: Printing checks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PrintChecksRequest'
+      responses:
+        '200':
+          description: Checks successfully printed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrintChecksResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
